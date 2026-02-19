@@ -6,21 +6,21 @@ cur = conn.cursor()
 
 cur.execute("""
 CREATE TABLE IF NOT EXISTS history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id INTEGER PRIMARY KEY,
     customer TEXT,
     datetime TEXT,
-    pdf_path TEXT
+    pdf TEXT
 )
 """)
 conn.commit()
 
-def add_history(customer, pdf_path):
+def add_history(customer, pdf):
     cur.execute(
         "INSERT INTO history VALUES (NULL, ?, ?, ?)",
-        (customer, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pdf_path)
+        (customer, datetime.now().strftime("%Y-%m-%d %H:%M:%S"), pdf)
     )
     conn.commit()
 
 def get_history():
-    cur.execute("SELECT customer, datetime, pdf_path FROM history ORDER BY id DESC")
+    cur.execute("SELECT customer, datetime, pdf FROM history ORDER BY id DESC")
     return cur.fetchall()
