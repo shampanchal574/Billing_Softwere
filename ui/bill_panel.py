@@ -1,8 +1,11 @@
-import customtkinter as ctk, os
+import customtkinter as ctk
+import os
+
 from logic.billing import calculate_total
 from logic.pdf_generator import generate_pdf
 from logic.whatsapp import open_whatsapp
 from database.history_db import add_history
+
 
 class BillPanel(ctk.CTkFrame):
     def __init__(self, parent):
@@ -23,7 +26,11 @@ class BillPanel(ctk.CTkFrame):
         self.total_label = ctk.CTkLabel(self, text="Total: ₹0")
         self.total_label.pack()
 
-        ctk.CTkButton(self, text="Generate & Share", command=self.share).pack(pady=10)
+        ctk.CTkButton(
+            self,
+            text="Generate & Share",
+            command=self.share
+        ).pack(pady=10)
 
     def add_item(self, product):
         name = product["name"]
@@ -42,31 +49,49 @@ class BillPanel(ctk.CTkFrame):
         for i in self.items.values():
             self.box.insert(
                 "end",
-                f"{i['name']} x{i['qty']} = ₹{i['price']*i['qty']}\n"
+                f"{i['name']} x{i['qty']} = ₹{i['price'] * i['qty']}\n"
             )
-        self.total_label.configure(
-            text=f"Total: ₹{calculate_total(self.items.values())}"
-        )
+        total = calculate_total(self.items.values())
+        self.total_label.configure(text=f"Total: ₹{total}")
 
     def share(self):
+        if not self.items:
+            return
+        if not self.customer.get() or not self.phone.get():
+            return
+
         items = list(self.items.values())
         total = calculate_total(items)
 
-        pdf = generate_pdf(
+        pdf_path = generate_pdf(
             self.customer.get(),
             self.phone.get(),
             items,
             total
         )
 
-        add_history(self.customer.get(), pdf)
+        add_history(
+            self.customer.get(),
+            self.phone.get(),
+            total,
+            pdf_path
+        )
 
         open_whatsapp(
             self.phone.get(),
-            f"🧾 Invoice from Panchal Store\n"
-            f"Total: ₹{total}\n"
+            f"🧾 Panchal Store Invoice\n\n"
+            f"Customer: {self.customer.get()}\n"
+            f"Total Amount: ₹{total}\n\n"
             f"Thank you for shopping with us 🙏\n"
             f"Please visit again!"
         )
 
-        os.startfile(os.path.dirname(pdf))
+        # Open invoice folder for quick attach
+        os.startfile(os.path.dirname(pdf_path))
+
+        # 🔥 Clear bill for next customer
+        self.items.clear()
+        self.box.delete("1.0", "end")
+        self.customer.delete(0, "end")
+        self.phone.delete(0, "end")
+        self.total_label.configure(text="Total: ₹0")
