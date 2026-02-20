@@ -1,11 +1,12 @@
 import customtkinter as ctk
 import os
 
+from utils.excel_sales import save_sale_to_excel
 from logic.billing import calculate_total
 from logic.pdf_generator import generate_pdf
 from logic.whatsapp import open_whatsapp
+from logic.products_store import reduce_stock
 from database.history_db import add_history
-
 
 class BillPanel(ctk.CTkFrame):
     def __init__(self, parent):
@@ -26,14 +27,14 @@ class BillPanel(ctk.CTkFrame):
         self.total_label = ctk.CTkLabel(self, text="Total: ₹0")
         self.total_label.pack()
 
-        ctk.CTkButton(
-            self,
-            text="Generate & Share",
-            command=self.share
-        ).pack(pady=10)
+        ctk.CTkButton(self, text="Generate & Share", command=self.share).pack(pady=10)
 
     def add_item(self, product):
         name = product["name"]
+
+        if not reduce_stock(name, 1):
+            return  # insufficient stock
+
         if name in self.items:
             self.items[name]["qty"] += 1
         else:
@@ -42,6 +43,7 @@ class BillPanel(ctk.CTkFrame):
                 "price": product["price"],
                 "qty": 1
             }
+
         self.update_bill()
 
     def update_bill(self):
@@ -56,8 +58,6 @@ class BillPanel(ctk.CTkFrame):
 
     def share(self):
         if not self.items:
-            return
-        if not self.customer.get() or not self.phone.get():
             return
 
         items = list(self.items.values())
@@ -77,19 +77,19 @@ class BillPanel(ctk.CTkFrame):
             pdf_path
         )
 
-        open_whatsapp(
-            self.phone.get(),
-            f"🧾 Panchal Store Invoice\n\n"
-            f"Customer: {self.customer.get()}\n"
-            f"Total Amount: ₹{total}\n\n"
-            f"Thank you for shopping with us 🙏\n"
-            f"Please visit again!"
-        )
+        # ---- WhatsApp message with FULL DETAILS ----
+        msg = "🧾 Panchal Store\n\n"
+        msg += f"Customer: {self.customer.get()}\n\n"
+        for i in items:
+            msg += f"{i['name']} x{i['qty']} = ₹{i['price']*i['qty']}\n"
+        msg += f"\nTotal Amount: ₹{total}\n\n"
+        msg += "Thank you for shopping with us 🙏\nVisit again!"
 
-        # Open invoice folder for quick attach
+        open_whatsapp(self.phone.get(), msg)
+
         os.startfile(os.path.dirname(pdf_path))
 
-        # 🔥 Clear bill for next customer
+        # Clear for next customer
         self.items.clear()
         self.box.delete("1.0", "end")
         self.customer.delete(0, "end")

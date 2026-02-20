@@ -1,28 +1,31 @@
 import customtkinter as ctk
-from ui.product_panel import ProductPanel
+
+from ui.products_panel import ProductsPanel
 from ui.bill_panel import BillPanel
 from ui.history_panel import HistoryPanel
+
 
 class BillingApp(ctk.CTk):
     def __init__(self):
         super().__init__()
+
         self.title("Billing Software")
         self.geometry("1200x600")
 
-        self.grid_columnconfigure((0,1,2), weight=1)
+        # Products big, Bill medium, History small
+        self.grid_columnconfigure(0, weight=4)
+        self.grid_columnconfigure(1, weight=4)
+        self.grid_columnconfigure(2, weight=1)
 
-        self.mode = "dark"
+        self.grid_rowconfigure(0, weight=1)
 
-        def toggle():
-            self.mode = "light" if self.mode == "dark" else "dark"
-            ctk.set_appearance_mode(self.mode)
+        self.bill_panel = BillPanel(self)
+        self.bill_panel.grid(row=0, column=1, sticky="nsew", padx=8, pady=8)
 
-        ctk.CTkButton(self, text="🌙 / ☀ Mode", command=toggle).grid(
-            row=1, column=1, pady=5
+        ProductsPanel(self, self.bill_panel).grid(
+            row=0, column=0, sticky="nsew", padx=8, pady=8
         )
 
-        bill = BillPanel(self)
-        bill.grid(row=0, column=1, sticky="nsew", padx=10, pady=10)
-
-        ProductPanel(self, bill.add_item).grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
-        HistoryPanel(self).grid(row=0, column=2, sticky="nsew", padx=10, pady=10)
+        HistoryPanel(self).grid(
+            row=0, column=2, sticky="nsew", padx=8, pady=8
+        )

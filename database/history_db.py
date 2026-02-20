@@ -69,3 +69,9 @@ def get_sales_summary(period):
             WHERE strftime('%Y-%m', datetime) = strftime('%Y-%m', 'now')
         """)
     return cur.fetchone()[0] or 0
+def get_yearly_income():
+    cur.execute("""
+        SELECT SUM(total) FROM history
+        WHERE strftime('%Y', datetime) = strftime('%Y', 'now')
+    """)
+    return cur.fetchone()[0] or 0
