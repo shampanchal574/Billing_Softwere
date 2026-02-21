@@ -65,11 +65,22 @@ class ProductsPanel(ctk.CTkFrame):
 
     # ================= ACTIONS =================
     def add_product(self):
-        add_product(
-            self.name.get(),
-            float(self.price.get()),
-            int(self.stock.get())
-        )
+        name = self.name.get().strip()
+        price = self.price.get().strip()
+        stock = self.stock.get().strip()
+
+        if not name or not price or not stock:
+            print("Please fill all fields")
+            return
+
+        try:
+            price = float(price)
+            stock = int(stock)
+        except ValueError:
+            print("Price must be a number and Stock must be an integer")
+            return
+
+        add_product(name, price, stock)
         self.clear()
         self.load_products()
 
@@ -101,7 +112,7 @@ class ProductsPanel(ctk.CTkFrame):
         elif stock < 50:
             return "orange"
         else:
-            return "White"
+            return "white"
 
     def product_text(self, p):
         return f"{p['name']} | ₹{p['price']} | Stock: {p['stock']}"
