@@ -1,12 +1,14 @@
-import customtkinter as ctk
-from ui.app_ui import BillingApp
-from logic.products_store import load_products
+from security.license_guard import is_first_time, validate_license
+from setup.first_setup import FirstSetup
+from ui.app_ui import AppUI
 
-ctk.set_appearance_mode("dark")
-ctk.set_default_color_theme("blue")
+if is_first_time():
+    app = FirstSetup()
+    app.mainloop()
 
+if not validate_license():
+    print("This software is licensed to another device.")
+    exit()
 
-load_products()
-
-app = BillingApp()
+app = AppUI()
 app.mainloop()

@@ -1,51 +1,38 @@
 import json
 import os
 
-DATA_FILE = "data/products.json"
-
-_products = {}
+PRODUCT_FILE = "data/products.json"
 
 
-# ================= LOAD ON APP START =================
 def load_products():
-    global _products
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r", encoding="utf-8") as f:
-            _products = json.load(f)
-    else:
-        _products = {}
+    if not os.path.exists(PRODUCT_FILE):
+        return []
+
+    with open(PRODUCT_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
 
 
-# ================= SAVE TO FILE =================
-def save_products():
+def save_products(products):
     os.makedirs("data", exist_ok=True)
-    with open(DATA_FILE, "w", encoding="utf-8") as f:
-        json.dump(_products, f, indent=4)
-
-
-# ================= CRUD OPERATIONS =================
-def get_products():
-    return _products
+    with open(PRODUCT_FILE, "w", encoding="utf-8") as f:
+        json.dump(products, f, indent=4)
 
 
 def add_product(name, price, stock):
-    _products[name] = {
+    products = load_products()
+
+    products.append({
         "name": name,
         "price": price,
         "stock": stock
-    }
-    save_products()
+    })
+
+    save_products(products)
 
 
-def remove_product(name):
-    if name in _products:
-        del _products[name]
-        save_products()
+def delete_product(index):
+    products = load_products()
 
-
-def reduce_stock(name, qty):
-    if name in _products and _products[name]["stock"] >= qty:
-        _products[name]["stock"] -= qty
-        save_products()
-        return True
-    return False
+    if 0 <= index < len(products):
+        products.pop(index)
+        save_products(products)

@@ -1,2 +1,5 @@
 customtkinter
 reportlab
+openpyxl
+pandas
+cryptography
